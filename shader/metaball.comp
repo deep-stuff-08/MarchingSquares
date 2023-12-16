@@ -1,0 +1,18 @@
+#version 460 core
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(binding = 0, r32f)writeonly restrict uniform image2D scalarDataField;
+layout(location = 0)uniform int numOfSpheres;
+layout(binding = 0, std430) buffer ssboSpheres {
+	vec4 spheres[];
+};
+
+void main(void) {
+	vec2 currentPoint = vec2(gl_GlobalInvocationID.xy) / vec2(gl_NumWorkGroups.xy) * 2.0 - 1.0;
+	float sf = 0;
+	for(int i = 0; i < numOfSpheres; i++) {
+		float dist = distance(currentPoint, spheres[i].xy);
+		sf += spheres[i].w / max(dist, 0.000001);
+	}
+	imageStore(scalarDataField, ivec2(gl_GlobalInvocationID.xy), vec4(sf));
+}
